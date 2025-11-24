@@ -2,8 +2,6 @@ function setup() {
     createCanvas(400, 400);
 }
 
-// Character
-
 let character = {
     x: 50,
     y: 50,
@@ -14,13 +12,19 @@ let character = {
     },
 };
 
-// Platform
-function drawPlatform(x, y) {
-    push();
-    fill("blue");
-    rect(x, y, 80, 20);
-    pop();
-}
+let platform = {
+    x: 250,
+    y: 250,
+    w: 80,
+    h: 20,
+
+    draw() {
+		push();
+        fill("blue");
+        rect(this.x, this.y, this.w, this.h);
+		pop();
+    },
+};
 
 // Obstacle / Spike / Death
 function drawObstacle() {
@@ -37,10 +41,11 @@ function draw() {
     background(100, 100, 100);
 
     character.draw();
+	platform.draw();
 
-    drawPlatform(x, y + 150);
+    // drawPlatform(x, y + 150);
 
-    drawObstacle();
+    // drawObstacle();
 
     // Floor
     line(0, 300, 400, 300);
