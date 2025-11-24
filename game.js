@@ -43,3 +43,9 @@ function draw() {
     // Floor
     line(0, 300, 400, 300);
 }
+
+function keyPressed(){
+    if(character.y + character.h === 300){
+        character.y -= 80;
+    }
+}
