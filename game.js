@@ -1,4 +1,5 @@
-let player;
+let player; // Snoowball
+let platforms = []; // array of platforms
 
 function setup() {
   // Create canvas
@@ -9,6 +10,13 @@ function setup() {
 
   // Text setup
   textAlign(CENTER, CENTER);
+
+  // Creates platforms
+  platforms.push(new Platform(80, 450, 100, 15));
+  platforms.push(new Platform(230, 380, 100, 15));
+  platforms.push(new Platform(60, 310, 100, 15));
+  platforms.push(new Platform(220, 240, 100, 15));
+  platforms.push(new Platform(120, 170, 100, 15));
 }
 
 function draw() {
@@ -20,6 +28,12 @@ function draw() {
   fill(240);
   rect(0, height - 40, width, 40);
 
+  // ----- Draw platforms -----
+  for (let i = 0; i < platforms.length; i++) {
+    platforms[i].draw();
+  }
+
+  // Update and draw snowball player
   player.update();
   player.draw();
 
