@@ -1,4 +1,4 @@
-let player; // Snoowball
+let player; // Snowball
 let platforms = []; // array of platforms
 
 function setup() {
@@ -11,7 +11,7 @@ function setup() {
   // Text setup
   textAlign(CENTER, CENTER);
 
-  // Creates platforms
+  // Create platforms
   platforms.push(new Platform(80, 450, 100, 15));
   platforms.push(new Platform(230, 380, 100, 15));
   platforms.push(new Platform(60, 310, 100, 15));
@@ -33,8 +33,13 @@ function draw() {
     platforms[i].draw();
   }
 
-  // Update and draw snowball player
+  // Update snowball position
   player.update();
+
+  // Handle collisions with platforms and ground
+  handleCollisions();
+
+  // Draw snowball
   player.draw();
 
   // Title text
@@ -45,6 +50,44 @@ function draw() {
   // Instructions text
   textSize(14);
   text("LEFT and RIGHT arrow to move, SPACE to jump", width / 2, 80);
+}
+
+// Collision handling
+function handleCollisions() {
+  // Check collision with platforms when falling down
+  if (player.vy > 0) {
+    for (let i = 0; i < platforms.length; i++) {
+      let p = platforms[i];
+
+      if (isOnPlatform(player, p)) {
+        // Place the player on top of the platform
+        player.y = p.y - player.radius;
+        player.vy = 0;
+      }
+    }
+  }
+  // Check collision with ground
+  const groundTop = height - 40 - player.radius; // top of the ground
+  if (player.y > groundTop) {
+    player.y = groundTop;
+    player.vy = 0;
+  }
+}
+
+// Check if the player is standing on a platform
+function isOnPlatform(player, platform) {
+  // Player bottom
+  const bottom = player.y + player.radius;
+
+  // Is the player above the top of the platform?
+  const aboveTop = bottom > platform.y;
+  const belowTop = bottom < platform.y + platform.h;
+
+  // Is the player horizontally within the platform?
+  const withinX = player.x > platform.x && player.x < platform.x + platform.w;
+
+  // Require that the player is moving downwards (vy > 0)
+  return aboveTop && belowTop && withinX;
 }
 
 // Lets player jump when SPACE is pressed
