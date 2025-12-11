@@ -4,12 +4,12 @@ class Player {
     this.x = x;
     this.y = y;
 
-    this.radius = 20; // size
-    this.vx = 0;
-    this.vy = 0;
+    this.radius = 20; // size of snowball
+    this.vx = 0; // speed left/right
+    this.vy = 0; // speed up/down
 
-    this.speed = 4; // speed movement left/right
-    this.gravity = 0.5; // speed falling down
+    this.speed = 4; // how fast player moves left/right
+    this.gravity = 0.5; // how fast player falls down
     this.jumpPower = -10; // how strong the jump is
   }
 
@@ -26,23 +26,13 @@ class Player {
     this.x += this.vx;
 
     // --- Vertical movement ---
-    // Apply gravity
-    this.vy += this.gravity; // fall down
+    // Gravity
+    this.vy += this.gravity;
     this.y += this.vy;
-
-    const groundY = height - 40 - this.radius;
-
-    if (this.y > groundY) {
-      this.y = groundY;
-      this.vy = 0; // stop falling when on the ground
-    }
   }
 
   jump() {
-    const groundY = height - 40 - this.radius;
-    if (this.y >= groundY) {
-      this.vy = this.jumpPower;
-    }
+    this.vy = this.jumpPower;
   }
 
   draw() {
