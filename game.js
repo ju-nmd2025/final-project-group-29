@@ -1,10 +1,14 @@
+let player;
+
 function setup() {
   // Create canvas
-  createCanvas(400, 700);
+  createCanvas(400, 600);
+
+  // Create player
+  player = new Player(width / 2, height - 80);
 
   // Text setup
   textAlign(CENTER, CENTER);
-  textSize(24);
 }
 
 function draw() {
@@ -14,9 +18,24 @@ function draw() {
   // Ground
   noStroke();
   fill(240);
-  rect(0, height - 100, width, 100);
+  rect(0, height - 40, width, 40);
+
+  player.update();
+  player.draw();
 
   // Title text
   fill(0);
-  text("Doodle Jump", width / 2, height / 2 - 300);
+  textSize(24);
+  text("Doodle Jump", width / 2, 50);
+
+  // Instructions text
+  textSize(14);
+  text("LEFT and RIGHT arrow to move, SPACE to jump", width / 2, 80);
+}
+
+// Lets player jump when SPACE is pressed
+function keyPressed() {
+  if (key === " ") {
+    player.jump();
+  }
 }
