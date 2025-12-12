@@ -1,10 +1,9 @@
 let player; // Snowball
 let platforms = []; // array of platforms
-let gameOver = false;
+let gameState = "start";
 
 function setup() {
   createCanvas(400, 600);
-
   textAlign(CENTER, CENTER);
 
   resetGame();
@@ -22,7 +21,8 @@ function resetGame() {
   platforms.push(new Platform(220, 240, 100, 15));
   platforms.push(new Platform(120, 170, 100, 15));
 
-  gameOver = false;
+  // After reset go back to start screen
+  gameState = "start";
 }
 
 function draw() {
@@ -34,32 +34,55 @@ function draw() {
     platforms[i].draw();
   }
 
-  if (!gameOver) {
-    // Update snowball position
+  // Update player movement only when playing
+  if (gameState === "playing") {
     player.update();
-
-    // Handle collisions with platforms
     handleCollisions();
-
-    // Check if the player has fallen off the bottom
     checkGameOver();
   }
 
   // Draw snowball
   player.draw();
 
-  // Title text
+  // UI text
   fill(0);
-  textSize(24);
-  text("Doodle Jump", width / 2, 50);
 
-  // Instructions text
-  textSize(14);
-  if (!gameOver) {
-    text("LEFT and RIGHT arrow to move, SPACE to jump", width / 2, 95);
-  } else {
-    text("Game Over! Press R to restart", width / 2, 70);
+  if (gameState === "start") {
+    drawStartScreen();
+  } else if (gameState === "playing") {
+    drawPlayingUI();
+  } else if (gameState === "gameover") {
+    drawGameOverScreen();
   }
+}
+
+// Text in start state
+function drawStartScreen() {
+  textSize(26);
+  text("Doodle Jump", width / 2, 120);
+
+  textSize(14);
+  text("Press ENTER to start", width / 2, 190);
+
+  text("← → move, SPACE jump", width / 2, 230);
+}
+
+// Text in playing state
+function drawPlayingUI() {
+  textSize(24);
+  text("Doodle Jump", width / 2, 40);
+
+  textSize(14);
+  text("← → move, SPACE jump", width / 2, 95);
+}
+
+// Text in gameover state
+function drawGameOverScreen() {
+  textSize(26);
+  text("Game Over!", width / 2, 120);
+
+  textSize(14);
+  text("Press R to restart", width / 2, 190);
 }
 
 // Collision handling
@@ -97,21 +120,27 @@ function isOnPlatform(player, platform) {
 // Check if player fell below bottom of screen
 function checkGameOver() {
   if (player.y - player.radius > height) {
-    gameOver = true;
+    gameState = "gameover";
   }
 }
 
 // Key controls
 function keyPressed() {
-  // Jump (only if not game over and player is not already flying upwards)
-  if (key === " " && !gameOver) {
-    if (player.vy === 0) {
-      player.jump();
-    }
+  // Start the game
+  if (
+    gameState === "start" &&
+    (key === "Enter" || key === "Return" || keyCode === 13)
+  ) {
+    gameState = "playing";
+  }
+
+  // Jump (only when playing )
+  if (gameState === "playing" && keyCode === 32) {
+    player.jump();
   }
 
   // Restart the game when game over
-  if ((key === "r" || key === "R") && gameOver) {
+  if ((key === "r" || key === "R") && gameState === "gameover") {
     resetGame();
   }
 }
