@@ -1,43 +1,49 @@
 let player; // Snowball
 let platforms = []; // array of platforms
+let gameOver = false;
 
 function setup() {
-  // Create canvas
   createCanvas(400, 600);
 
-  // Create player
-  player = new Player(width / 2, height - 80);
-
-  // Text setup
   textAlign(CENTER, CENTER);
 
-  // Create platforms
+  resetGame();
+}
+
+function resetGame() {
+  // Create the player in the middle, near the bottom
+  player = new Player(width / 2, height - 80);
+
+  // Clear and recreate platforms
+  platforms = [];
   platforms.push(new Platform(80, 450, 100, 15));
   platforms.push(new Platform(230, 380, 100, 15));
   platforms.push(new Platform(60, 310, 100, 15));
   platforms.push(new Platform(220, 240, 100, 15));
   platforms.push(new Platform(120, 170, 100, 15));
+
+  gameOver = false;
 }
 
 function draw() {
   // Background
   background(150, 150, 150);
 
-  // Ground
-  noStroke();
-  fill(240);
-  rect(0, height - 40, width, 40);
-
   // ----- Draw platforms -----
   for (let i = 0; i < platforms.length; i++) {
     platforms[i].draw();
   }
 
-  // Update snowball position
-  player.update();
+  if (!gameOver) {
+    // Update snowball position
+    player.update();
 
-  // Handle collisions with platforms and ground
-  handleCollisions();
+    // Handle collisions with platforms
+    handleCollisions();
+
+    // Check if the player has fallen off the bottom
+    checkGameOver();
+  }
 
   // Draw snowball
   player.draw();
@@ -49,7 +55,11 @@ function draw() {
 
   // Instructions text
   textSize(14);
-  text("LEFT and RIGHT arrow to move, SPACE to jump", width / 2, 80);
+  if (!gameOver) {
+    text("LEFT and RIGHT arrow to move, SPACE to jump", width / 2, 95);
+  } else {
+    text("Game Over! Press R to restart", width / 2, 70);
+  }
 }
 
 // Collision handling
@@ -65,12 +75,6 @@ function handleCollisions() {
         player.vy = 0;
       }
     }
-  }
-  // Check collision with ground
-  const groundTop = height - 40 - player.radius; // top of the ground
-  if (player.y > groundTop) {
-    player.y = groundTop;
-    player.vy = 0;
   }
 }
 
@@ -90,9 +94,24 @@ function isOnPlatform(player, platform) {
   return aboveTop && belowTop && withinX;
 }
 
-// Lets player jump when SPACE is pressed
+// Check if player fell below bottom of screen
+function checkGameOver() {
+  if (player.y - player.radius > height) {
+    gameOver = true;
+  }
+}
+
+// Key controls
 function keyPressed() {
-  if (key === " ") {
-    player.jump();
+  // Jump (only if not game over and player is not already flying upwards)
+  if (key === " " && !gameOver) {
+    if (player.vy === 0) {
+      player.jump();
+    }
+  }
+
+  // Restart the game when game over
+  if ((key === "r" || key === "R") && gameOver) {
+    resetGame();
   }
 }
