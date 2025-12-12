@@ -2,6 +2,10 @@ let player; // Snowball
 let platforms = []; // array of platforms
 let gameState = "start";
 
+// Score variables
+let score = 0;
+let highestY = 0; // Tracks upward progress
+
 function setup() {
   createCanvas(400, 600);
   textAlign(CENTER, CENTER);
@@ -21,6 +25,10 @@ function resetGame() {
   platforms.push(new Platform(220, 240, 100, 15));
   platforms.push(new Platform(120, 170, 100, 15));
 
+  // Reset score tracking
+  score = 0;
+  highestY = player.y;
+
   // After reset go back to start screen
   gameState = "start";
 }
@@ -38,6 +46,7 @@ function draw() {
   if (gameState === "playing") {
     player.update();
     handleCollisions();
+    updateScore();
     checkGameOver();
   }
 
@@ -74,6 +83,9 @@ function drawPlayingUI() {
 
   textSize(14);
   text("← → move, SPACE jump", width / 2, 95);
+
+  // Display score
+  text("Score: " + score, width / 2, 130);
 }
 
 // Text in gameover state
@@ -115,6 +127,14 @@ function isOnPlatform(player, platform) {
 
   // Require that the player is moving downwards (vy > 0)
   return aboveTop && belowTop && withinX;
+}
+
+//Increase score when player climbs higher
+function updateScore() {
+  if (player.y < highestY) {
+    score += Math.floor(highestY - player.y);
+    highestY = player.y;
+  }
 }
 
 // Check if player fell below bottom of screen
