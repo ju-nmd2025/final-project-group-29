@@ -13,7 +13,6 @@ const NUM_PLATFORMS = 8;
 function setup() {
   createCanvas(400, 600);
   textAlign(CENTER, CENTER);
-
   resetGame();
 }
 
@@ -27,13 +26,14 @@ function resetGame() {
   // Create a fresh set of platforms
   platforms = [];
 
-  // A platform near the bottom so you don't instantly fall
+  // Starter platform (normal)
   platforms.push(
     new Platform(
       width / 2 - PLATFORM_W / 2,
       height - 120,
       PLATFORM_W,
-      PLATFORM_H
+      PLATFORM_H,
+      "normal"
     )
   );
 
@@ -51,8 +51,9 @@ function draw() {
   // Background
   background(150, 150, 150);
 
-  // Draw platforms
+  // Update + draw platforms
   for (let i = 0; i < platforms.length; i++) {
+    platforms[i].update();
     platforms[i].draw();
   }
 
@@ -98,6 +99,9 @@ function drawPlayingUI() {
 
   // Display score
   text("Score: " + score, width / 2, 130);
+
+  textSize(12);
+  text("Blue = normal, Dark = moving, Pink = breaking", width / 2, 155);
 }
 
 // Text in gameover state
@@ -107,7 +111,6 @@ function drawGameOverScreen() {
 
   textSize(14);
   text("Press R to restart", width / 2, 190);
-
   text("Final score: " + score, width / 2, 220);
 }
 
@@ -116,12 +119,17 @@ function handleCollisions() {
   // Only land on platforms when falling
   if (player.vy > 0) {
     for (let i = 0; i < platforms.length; i++) {
-      let p = platforms[i];
+      const p = platforms[i];
+
+      // broken platforms don't collide
+      if (p.broken) continue;
 
       if (isOnPlatform(player, p)) {
-        // Place the player on top of the platform
         player.y = p.y - player.radius;
         player.vy = 0;
+
+        // If it is a breaking platform, break it after landing
+        p.break();
       }
     }
   }
@@ -184,7 +192,14 @@ function recyclePlatforms() {
 
 function makeRandomPlatform(y) {
   const x = random(20, width - 20 - PLATFORM_W);
-  return new Platform(x, y, PLATFORM_W, PLATFORM_H);
+
+  // Choose a type
+  const r = random(1);
+  let type = "normal";
+  if (r < 0.2) type = "moving"; // 20%
+  else if (r < 0.35) type = "breaking"; // 15%
+
+  return new Platform(x, y, PLATFORM_W, PLATFORM_H, type);
 }
 
 // Check if player fell below screen
