@@ -2,9 +2,13 @@ let player; // Snowball
 let platforms = []; // array of platforms
 let gameState = "start";
 
-// Score variables
+// Score
 let score = 0;
-let highestY = 0; // Tracks upward progress
+
+// Platform settings
+const PLATFORM_W = 100;
+const PLATFORM_H = 15;
+const NUM_PLATFORMS = 8;
 
 function setup() {
   createCanvas(400, 600);
@@ -17,19 +21,29 @@ function resetGame() {
   // Create the player in the middle, near the bottom
   player = new Player(width / 2, height - 80);
 
-  // Clear and recreate platforms
-  platforms = [];
-  platforms.push(new Platform(80, 450, 100, 15));
-  platforms.push(new Platform(230, 380, 100, 15));
-  platforms.push(new Platform(60, 310, 100, 15));
-  platforms.push(new Platform(220, 240, 100, 15));
-  platforms.push(new Platform(120, 170, 100, 15));
-
-  // Reset score tracking
+  // Reset score
   score = 0;
-  highestY = player.y;
 
-  // After reset go back to start screen
+  // Create a fresh set of platforms
+  platforms = [];
+
+  // A platform near the bottom so you don't instantly fall
+  platforms.push(
+    new Platform(
+      width / 2 - PLATFORM_W / 2,
+      height - 120,
+      PLATFORM_W,
+      PLATFORM_H
+    )
+  );
+
+  // Add the rest above it
+  for (let i = 1; i < NUM_PLATFORMS; i++) {
+    const y = height - 120 - i * 80; // spacing between platforms
+    platforms.push(makeRandomPlatform(y));
+  }
+
+  // Start screen
   gameState = "start";
 }
 
@@ -37,25 +51,24 @@ function draw() {
   // Background
   background(150, 150, 150);
 
-  // ----- Draw platforms -----
+  // Draw platforms
   for (let i = 0; i < platforms.length; i++) {
     platforms[i].draw();
   }
 
-  // Update player movement only when playing
   if (gameState === "playing") {
     player.update();
     handleCollisions();
-    updateScore();
+    scrollWorldIfNeeded(); // moves platforms down + increases score
+    recyclePlatforms(); // remove old + create new
     checkGameOver();
   }
 
-  // Draw snowball
+  // Draw player
   player.draw();
 
-  // UI text
+  // UI
   fill(0);
-
   if (gameState === "start") {
     drawStartScreen();
   } else if (gameState === "playing") {
@@ -72,7 +85,6 @@ function drawStartScreen() {
 
   textSize(14);
   text("Press ENTER to start", width / 2, 190);
-
   text("← → move, SPACE jump", width / 2, 230);
 }
 
@@ -95,11 +107,13 @@ function drawGameOverScreen() {
 
   textSize(14);
   text("Press R to restart", width / 2, 190);
+
+  text("Final score: " + score, width / 2, 220);
 }
 
 // Collision handling
 function handleCollisions() {
-  // Check collision with platforms when falling down
+  // Only land on platforms when falling
   if (player.vy > 0) {
     for (let i = 0; i < platforms.length; i++) {
       let p = platforms[i];
@@ -113,31 +127,67 @@ function handleCollisions() {
   }
 }
 
-// Check if the player is standing on a platform
 function isOnPlatform(player, platform) {
-  // Player bottom
   const bottom = player.y + player.radius;
 
-  // Is the player above the top of the platform?
-  const aboveTop = bottom > platform.y;
-  const belowTop = bottom < platform.y + platform.h;
-
-  // Is the player horizontally within the platform?
+  const inVerticalBand =
+    bottom > platform.y && bottom < platform.y + platform.h;
   const withinX = player.x > platform.x && player.x < platform.x + platform.w;
 
-  // Require that the player is moving downwards (vy > 0)
-  return aboveTop && belowTop && withinX;
+  return inVerticalBand && withinX;
 }
 
-//Increase score when player climbs higher
-function updateScore() {
-  if (player.y < highestY) {
-    score += Math.floor(highestY - player.y);
-    highestY = player.y;
+// Scroll down when player moves up
+function scrollWorldIfNeeded() {
+  // When player goes above this height, scroll down
+  const scrollThreshold = height / 3;
+
+  // Only scroll when moving upward
+  if (player.y < scrollThreshold && player.vy < 0) {
+    // How much we need to move things down
+    const dy = scrollThreshold - player.y;
+
+    // Keep player at the threshold
+    player.y = scrollThreshold;
+
+    // Move all platforms down
+    for (let i = 0; i < platforms.length; i++) {
+      platforms[i].y += dy;
+    }
+
+    // Increase score based on how much we scrolled
+    score += Math.floor(dy);
   }
 }
 
-// Check if player fell below bottom of screen
+function recyclePlatforms() {
+  // Find the highest platform y (smallest y value)
+  let highestY = platforms[0].y;
+  for (let i = 1; i < platforms.length; i++) {
+    if (platforms[i].y < highestY) highestY = platforms[i].y;
+  }
+
+  // Remove platforms that fell below the screen and replace them above the highest one
+  for (let i = platforms.length - 1; i >= 0; i--) {
+    if (platforms[i].y > height + 50) {
+      platforms.splice(i, 1);
+
+      // Create a new platform above the current highest
+      const newY = highestY - random(60, 100);
+      platforms.push(makeRandomPlatform(newY));
+
+      // Update highestY so the next one stacks above it
+      highestY = newY;
+    }
+  }
+}
+
+function makeRandomPlatform(y) {
+  const x = random(20, width - 20 - PLATFORM_W);
+  return new Platform(x, y, PLATFORM_W, PLATFORM_H);
+}
+
+// Check if player fell below screen
 function checkGameOver() {
   if (player.y - player.radius > height) {
     gameState = "gameover";
@@ -154,12 +204,12 @@ function keyPressed() {
     gameState = "playing";
   }
 
-  // Jump (only when playing )
+  // Jump
   if (gameState === "playing" && keyCode === 32) {
     player.jump();
   }
 
-  // Restart the game when game over
+  // Restart game
   if ((key === "r" || key === "R") && gameState === "gameover") {
     resetGame();
   }
