@@ -3,6 +3,7 @@ class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+    this.prevY = y;
 
     this.radius = 20; // size of snowball
     this.vx = 0; // speed left/right
@@ -10,10 +11,11 @@ class Player {
 
     this.speed = 4; // how fast player moves left/right
     this.gravity = 0.5; // how fast player falls down
-    this.jumpPower = -10; // how strong the jump is
+    this.jumpPower = -12; // how strong the jump is
   }
 
   update() {
+    this.prevY = this.y;
     // --- Horizontal movement ---
     if (keyIsDown(LEFT_ARROW)) {
       this.vx = -this.speed;
@@ -24,6 +26,10 @@ class Player {
     }
 
     this.x += this.vx;
+
+    // Keep the player inside the screen
+    if (this.x < this.radius) this.x = this.radius;
+    if (this.x > width - this.radius) this.x = width - this.radius;
 
     // --- Vertical movement ---
     // Gravity

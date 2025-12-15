@@ -8,7 +8,12 @@ let score = 0;
 // Platform settings
 const PLATFORM_W = 100;
 const PLATFORM_H = 15;
-const NUM_PLATFORMS = 8;
+const NUM_PLATFORMS = 12;
+const MAX_GAP = 55; // never allow platforms farther apart than this (vertically)
+
+function randomGap() {
+  return random(MAX_GAP - 10, MAX_GAP);
+}
 
 function setup() {
   createCanvas(400, 600);
@@ -18,7 +23,7 @@ function setup() {
 
 function resetGame() {
   // Create the player in the middle, near the bottom
-  player = new Player(width / 2, height - 80);
+  player = new Player(width / 2, height - 150);
 
   // Reset score
   score = 0;
@@ -29,7 +34,7 @@ function resetGame() {
   // Starter platform (normal)
   platforms.push(
     new Platform(
-      width / 2 - PLATFORM_W / 2,
+      player.x - PLATFORM_W / 2,
       height - 120,
       PLATFORM_W,
       PLATFORM_H,
@@ -38,8 +43,10 @@ function resetGame() {
   );
 
   // Add the rest above it
+  let y = height - 120;
+
   for (let i = 1; i < NUM_PLATFORMS; i++) {
-    const y = height - 120 - i * 80; // spacing between platforms
+    y -= randomGap();
     platforms.push(makeRandomPlatform(y));
   }
 
@@ -59,7 +66,7 @@ function draw() {
 
   if (gameState === "playing") {
     player.update();
-    handleCollisions();
+    handleCollisionsAndAutoJump();
     scrollWorldIfNeeded(); // moves platforms down + increases score
     recyclePlatforms(); // remove old + create new
     checkGameOver();
@@ -86,7 +93,7 @@ function drawStartScreen() {
 
   textSize(14);
   text("Press ENTER to start", width / 2, 190);
-  text("← → move, SPACE jump", width / 2, 230);
+  text("← → to move", width / 2, 230);
 }
 
 // Text in playing state
@@ -95,7 +102,7 @@ function drawPlayingUI() {
   text("Doodle Jump", width / 2, 40);
 
   textSize(14);
-  text("← → move, SPACE jump", width / 2, 95);
+  text("← → to move", width / 2, 95);
 
   // Display score
   text("Score: " + score, width / 2, 130);
@@ -115,7 +122,7 @@ function drawGameOverScreen() {
 }
 
 // Collision handling
-function handleCollisions() {
+function handleCollisionsAndAutoJump() {
   // Only land on platforms when falling
   if (player.vy > 0) {
     for (let i = 0; i < platforms.length; i++) {
@@ -125,24 +132,38 @@ function handleCollisions() {
       if (p.broken) continue;
 
       if (isOnPlatform(player, p)) {
+        // Place player on platform
         player.y = p.y - player.radius;
-        player.vy = 0;
+
+        // Auto-jump
+        player.jump();
 
         // If it is a breaking platform, break it after landing
         p.break();
+
+        // Stop after first platform hit this frame
+        // (prevents double jumps if platforms overlap)
+        break;
       }
     }
   }
 }
 
 function isOnPlatform(player, platform) {
-  const bottom = player.y + player.radius;
+  const playerBottomNow = player.y + player.radius;
+  const playerBottomBefore = player.prevY + player.radius;
 
-  const inVerticalBand =
-    bottom > platform.y && bottom < platform.y + platform.h;
-  const withinX = player.x > platform.x && player.x < platform.x + platform.w;
+  const platformTop = platform.y;
 
-  return inVerticalBand && withinX;
+  const crossedTop =
+    playerBottomBefore <= platformTop && playerBottomNow >= platformTop;
+
+  // Snowball overlaps platform
+  const withinX =
+    player.x + player.radius > platform.x &&
+    player.x - player.radius < platform.x + platform.w;
+
+  return crossedTop && withinX;
 }
 
 // Scroll down when player moves up
@@ -181,7 +202,7 @@ function recyclePlatforms() {
       platforms.splice(i, 1);
 
       // Create a new platform above the current highest
-      const newY = highestY - random(60, 100);
+      const newY = highestY - randomGap();
       platforms.push(makeRandomPlatform(newY));
 
       // Update highestY so the next one stacks above it
@@ -196,8 +217,8 @@ function makeRandomPlatform(y) {
   // Choose a type
   const r = random(1);
   let type = "normal";
-  if (r < 0.2) type = "moving"; // 20%
-  else if (r < 0.35) type = "breaking"; // 15%
+  if (r < 0.12) type = "moving"; // 12%
+  else if (r < 0.2) type = "breaking"; // 8%
 
   return new Platform(x, y, PLATFORM_W, PLATFORM_H, type);
 }
@@ -217,11 +238,6 @@ function keyPressed() {
     (key === "Enter" || key === "Return" || keyCode === 13)
   ) {
     gameState = "playing";
-  }
-
-  // Jump
-  if (gameState === "playing" && keyCode === 32) {
-    player.jump();
   }
 
   // Restart game
