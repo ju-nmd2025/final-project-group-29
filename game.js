@@ -11,6 +11,10 @@ const PLATFORM_H = 15;
 const NUM_PLATFORMS = 12;
 const MAX_GAP = 55; // never allow platforms farther apart than this (vertically)
 
+//Snowflakes
+let snowflakes = [];
+const NUM_SNOWFLAKES = 120;
+
 function randomGap() {
   return random(MAX_GAP - 10, MAX_GAP);
 }
@@ -18,8 +22,11 @@ function randomGap() {
 function setup() {
   createCanvas(400, 600);
   textAlign(CENTER, CENTER);
+  resetSnow();
   resetGame();
 }
+
+window.setup = setup;
 
 function resetGame() {
   // Create the player in the middle, near the bottom
@@ -56,7 +63,8 @@ function resetGame() {
 
 function draw() {
   // Background
-  background(150, 150, 150);
+  drawWinterBackground();
+  drawSnow();
 
   // Update + draw platforms
   for (let i = 0; i < platforms.length; i++) {
@@ -70,6 +78,51 @@ function draw() {
     scrollWorldIfNeeded(); // moves platforms down + increases score
     recyclePlatforms(); // remove old + create new
     checkGameOver();
+  }
+
+  function drawWinterBackground() {
+    // Gradient sky
+    for (let y = 0; y < height; y++) {
+      const t = y / height;
+
+      const r = lerp(120, 200, t);
+      const g = lerp(160, 225, t);
+      const b = lerp(210, 255, t);
+
+      stroke(r, g, b);
+      line(0, y, width, y);
+    }
+
+    noStroke();
+
+    // Snow at the bottom
+    fill(235, 245, 255);
+    ellipse(width * 0.3, height + 40, 400, 200);
+    ellipse(width * 0.8, height + 60, 500, 240);
+  }
+
+  function drawSnow() {
+    noStroke();
+    fill(255, 230);
+
+    for (let i = 0; i < snowflakes.length; i++) {
+      const s = snowflakes[i];
+
+      circle(s.x, s.y, s.r);
+
+      // Move snow
+      s.y += s.speed;
+      s.x += s.drift;
+
+      // Wrap around
+      if (s.y > height + 10) {
+        s.y = -10;
+        s.x = random(width);
+      }
+
+      if (s.x < -10) s.x = width + 10;
+      if (s.x > width + 10) s.x = -10;
+    }
   }
 
   // Draw player
@@ -89,31 +142,34 @@ function draw() {
 // Text in start state
 function drawStartScreen() {
   textSize(26);
-  text("Doodle Jump", width / 2, 120);
+  fill(40, 70, 110);
+  text("Snowy Doodle Jump", width / 2, 120);
 
   textSize(14);
-  text("Press ENTER to start", width / 2, 190);
-  text("← → to move", width / 2, 230);
+  text("Press ENTER to start", width / 2, 250);
+  text("← → to move", width / 2, 300);
+
+  textSize(12);
+  text("White = normal, Blue = moving, Dark blue = breaking", width / 2, 520);
 }
 
 // Text in playing state
 function drawPlayingUI() {
   textSize(24);
-  text("Doodle Jump", width / 2, 40);
+  fill(40, 70, 110);
+  text("Snowy Doodle Jump", width / 2, 40);
 
   textSize(14);
   text("← → to move", width / 2, 95);
 
   // Display score
   text("Score: " + score, width / 2, 130);
-
-  textSize(12);
-  text("Blue = normal, Dark = moving, Pink = breaking", width / 2, 155);
 }
 
 // Text in gameover state
 function drawGameOverScreen() {
   textSize(26);
+  fill(40, 70, 110);
   text("Game Over!", width / 2, 120);
 
   textSize(14);
@@ -227,6 +283,19 @@ function makeRandomPlatform(y) {
 function checkGameOver() {
   if (player.y - player.radius > height) {
     gameState = "gameover";
+  }
+}
+
+function resetSnow() {
+  snowflakes = [];
+  for (let i = 0; i < NUM_SNOWFLAKES; i++) {
+    snowflakes.push({
+      x: random(width),
+      y: random(height),
+      r: random(1, 4),
+      speed: random(0.5, 2),
+      drift: random(-0.3, 0.3),
+    });
   }
 }
 

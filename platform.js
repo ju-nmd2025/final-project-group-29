@@ -37,11 +37,13 @@ class Platform {
 
     noStroke();
 
-    // Simple color coding
-    if (this.type === "normal") fill(210, 240, 255); // icy blue
-    if (this.type === "moving") fill(180, 230, 255); // darker blue
-    if (this.type === "breaking") fill(255, 210, 210); // pink-ish
+    // Color coding
+    if (this.type === "normal") fill(235, 245, 255); // White
+    if (this.type === "moving") fill(160, 205, 235); // Blue
+    if (this.type === "breaking") fill(90, 140, 190); // Dark blue
 
-    rect(this.x, this.y, this.w, this.h, 5);
+    rect(this.x, this.y, this.w, this.h, 7);
+    fill(255, 240);
+    rect(this.x, this.y, this.w, 4, 7);
   }
 }

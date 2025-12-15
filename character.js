@@ -16,7 +16,7 @@ class Player {
 
   update() {
     this.prevY = this.y;
-    // --- Horizontal movement ---
+    // Horizontal movement
     if (keyIsDown(LEFT_ARROW)) {
       this.vx = -this.speed;
     } else if (keyIsDown(RIGHT_ARROW)) {
@@ -31,7 +31,7 @@ class Player {
     if (this.x < this.radius) this.x = this.radius;
     if (this.x > width - this.radius) this.x = width - this.radius;
 
-    // --- Vertical movement ---
+    // Vertical movement
     // Gravity
     this.vy += this.gravity;
     this.y += this.vy;
